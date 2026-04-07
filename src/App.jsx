@@ -268,14 +268,48 @@ function HorairesSection() {
 
 function PrestationsSection() {
   const scrollRef = useRef(null)
+  const wrapRef = useRef(null)
   const CARD_STEP = 242 // card width (230) + gap (12)
-  const scroll = dir => {
-    const el = scrollRef.current
-    if (!el) return
-    const current = Math.round(el.scrollLeft / CARD_STEP)
-    const target = Math.max(0, Math.min(SERVICES.length - 1, current + dir))
-    el.scrollTo({ left: target * CARD_STEP, behavior: 'smooth' })
+  const currentCard = useRef(0)
+  const touchStartX = useRef(null)
+  const locked = useRef(false)
+
+  const scrollToCard = (index, smooth = true) => {
+    const clamped = Math.max(0, Math.min(SERVICES.length - 1, index))
+    currentCard.current = clamped
+    scrollRef.current?.scrollTo({ left: clamped * CARD_STEP, behavior: smooth ? 'smooth' : 'instant' })
   }
+
+  const scroll = dir => scrollToCard(currentCard.current + dir)
+
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const onTouchStart = e => {
+      if (locked.current) return
+      touchStartX.current = e.touches[0].clientX
+    }
+    const onTouchMove = e => {
+      if (touchStartX.current === null) return
+      const dx = e.touches[0].clientX - touchStartX.current
+      if (Math.abs(dx) > 5) e.preventDefault()
+    }
+    const onTouchEnd = e => {
+      if (touchStartX.current === null) return
+      const dx = touchStartX.current - e.changedTouches[0].clientX
+      if (dx > 50) scrollToCard(currentCard.current + 1)
+      else if (dx < -50) scrollToCard(currentCard.current - 1)
+      touchStartX.current = null
+    }
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [])
   return (
     <div className="section">
       <div className="section-header">
@@ -293,7 +327,7 @@ function PrestationsSection() {
           </button>
         </div>
       </div>
-      <div className="prestations-wrap">
+      <div className="prestations-wrap" ref={wrapRef}>
         <div className="prestations-scroll" ref={scrollRef}>
           {SERVICES.map(s => (
             <div key={s.title} className="service-card">
@@ -371,22 +405,47 @@ function ReviewCard({ name, rating, ratingLabel, title, comment, avatar, date })
   )
 }
 
+// Infinite carousel: [clone of last, ...slides, clone of first]
+const INFINITE = [REVIEWS[REVIEWS.length - 1], ...REVIEWS, REVIEWS[0]]
+
 function AvisSection() {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  // Start at 1 (the real first slide)
+  const [pos, setPos] = useState(1)
+  const [animated, setAnimated] = useState(true)
   const [dragOffset, setDragOffset] = useState(0)
   const [dragging, setDragging] = useState(false)
   const touchStartX = useRef(null)
-
   const carouselRef = useRef(null)
   const dragOffsetRef = useRef(0)
+  const locked = useRef(false)
 
-  const next = () => setCurrentIndex(i => (i + 1) % REVIEWS.length)
-  const prev = () => setCurrentIndex(i => (i - 1 + REVIEWS.length) % REVIEWS.length)
+  // Real index for display (0-based)
+  const realIndex = pos === 0 ? REVIEWS.length - 1 : pos === INFINITE.length - 1 ? 0 : pos - 1
+
+  const goTo = nextPos => {
+    if (locked.current) return
+    locked.current = true
+    setAnimated(true)
+    setPos(nextPos)
+  }
+  const next = () => goTo(pos + 1)
+  const prev = () => goTo(pos - 1)
+
+  // After sliding to a clone, silently jump to the real slide
+  const onTransitionEnd = () => {
+    if (pos === 0) {
+      setAnimated(false)
+      setPos(REVIEWS.length)
+    } else if (pos === INFINITE.length - 1) {
+      setAnimated(false)
+      setPos(1)
+    }
+    locked.current = false
+  }
 
   useEffect(() => {
     const el = carouselRef.current
     if (!el) return
-
     const onTouchStart = e => {
       touchStartX.current = e.touches[0].clientX
       setDragging(true)
@@ -400,14 +459,14 @@ function AvisSection() {
     }
     const onTouchEnd = () => {
       const dx = dragOffsetRef.current
-      if (dx < -50) setCurrentIndex(i => (i + 1) % REVIEWS.length)
-      else if (dx > 50) setCurrentIndex(i => (i - 1 + REVIEWS.length) % REVIEWS.length)
+      if (dx < -50) setPos(p => p + 1)
+      else if (dx > 50) setPos(p => p - 1)
       dragOffsetRef.current = 0
       setDragOffset(0)
       setDragging(false)
+      setAnimated(true)
       touchStartX.current = null
     }
-
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: false })
     el.addEventListener('touchend', onTouchEnd, { passive: true })
@@ -419,8 +478,8 @@ function AvisSection() {
   }, [])
 
   const trackStyle = {
-    transform: `translateX(calc(-${currentIndex * 100}% + ${dragOffset}px))`,
-    transition: dragging ? 'none' : 'transform 0.3s ease',
+    transform: `translateX(calc(-${pos * 100}% + ${dragOffset}px))`,
+    transition: dragging || !animated ? 'none' : 'transform 0.3s ease',
   }
 
   return (
@@ -431,7 +490,7 @@ function AvisSection() {
           <span className="rs-count">({REVIEWS.length})</span>
         </div>
         <div className="rs-nav">
-          <span className="rs-counter">{currentIndex + 1} / {REVIEWS.length}</span>
+          <span className="rs-counter">{realIndex + 1} / {REVIEWS.length}</span>
           <div className="rs-nav-btns">
             <button className="rs-nav-btn" onClick={prev} aria-label="Previous">
               <svg width="9" height="9" fill="none" viewBox="0 0 5 9" style={{ transform: 'rotate(180deg)' }}>
@@ -447,9 +506,9 @@ function AvisSection() {
         </div>
       </div>
       <div className="rs-carousel" ref={carouselRef}>
-        <div className="rs-track" style={trackStyle}>
-          {REVIEWS.map(r => (
-            <div key={r.id} className="rs-slide">
+        <div className="rs-track" style={trackStyle} onTransitionEnd={onTransitionEnd}>
+          {INFINITE.map((r, i) => (
+            <div key={i} className="rs-slide">
               <ReviewCard {...r} />
             </div>
           ))}
