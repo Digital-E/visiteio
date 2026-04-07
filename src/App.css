@@ -19,6 +19,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  text-decoration: none;
+  color: #000;
   background: #f6f6f6;
   border-radius: 100px;
   padding: 6px 14px;
@@ -72,7 +74,7 @@
   font-weight: 400;
   color: #1d19ff;
   text-decoration: none;
-  display: block;
+  display: inline-block;
   margin-bottom: 24px;
 }
 
@@ -374,6 +376,7 @@
   overflow: hidden;
   margin-left: -25px;
   margin-right: -25px;
+  touch-action: pan-y;
 }
 
 .rs-track {

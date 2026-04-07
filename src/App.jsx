@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import doctorImg from './assets/doctor.jpg'
 import dental1Img from './assets/dental1.jpg'
@@ -191,12 +191,12 @@ function Collapsible({ title, children }) {
 function Header() {
   return (
     <div className="header">
-      <div className="pill">
+      <a className="pill" href="tel:+33616632760">
         <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
           <path d="M1.81 3.895C2.53 5.31 3.69 6.465 5.105 7.19L6.205 6.09C6.34 5.955 6.54 5.91 6.715 5.97C7.275 6.155 7.88 6.255 8.5 6.255C8.775 6.255 9 6.48 9 6.755V8.5C9 8.775 8.775 9 8.5 9C3.805 9 0 5.195 0 0.5C0 0.225 0.225 0 0.5 0H2.25C2.525 0 2.75 0.225 2.75 0.5C2.75 1.125 2.85 1.725 3.035 2.285C3.09 2.46 3.05 2.655 2.91 2.795L1.81 3.895Z" fill="black"/>
         </svg>
         Contact
-      </div>
+      </a>
       <div className="pill pill-open">
         <span className="dot-green" />
         Ouvert
@@ -211,12 +211,12 @@ function BioCard() {
       <div className="bio-text">
         <div className="bio-name">Dr. Joao Maria Mendes</div>
         <div className="bio-specialty">Chirurgien-Dentiste à Pessac</div>
-        <a className="bio-link" href="#">Doctolib</a>
+        <a className="bio-link" href="https://www.doctolib.fr/dentiste/pessac/maria-joao-mendes#presentation" target="_blank" rel="noreferrer">Doctolib</a>
         <div className="bio-label">Adresse</div>
         <div className="bio-address">
           73 Av. du Général Leclerc<br />33600 Pessac
         </div>
-        <a className="bio-link" href="#">Ouvrir dans Maps</a>
+        <a className="bio-link" href="https://maps.app.goo.gl/J9Hnp76zi6duitAC7" target="_blank" rel="noreferrer">Ouvrir dans Maps</a>
       </div>
       <img className="bio-photo" src={IMAGES.doctor} alt="Dr. Joao Maria Mendes" />
     </div>
@@ -268,8 +268,13 @@ function HorairesSection() {
 
 function PrestationsSection() {
   const scrollRef = useRef(null)
+  const CARD_STEP = 242 // card width (230) + gap (12)
   const scroll = dir => {
-    scrollRef.current?.scrollBy({ left: dir * 242, behavior: 'smooth' })
+    const el = scrollRef.current
+    if (!el) return
+    const current = Math.round(el.scrollLeft / CARD_STEP)
+    const target = Math.max(0, Math.min(SERVICES.length - 1, current + dir))
+    el.scrollTo({ left: target * CARD_STEP, behavior: 'smooth' })
   }
   return (
     <div className="section">
@@ -372,26 +377,46 @@ function AvisSection() {
   const [dragging, setDragging] = useState(false)
   const touchStartX = useRef(null)
 
+  const carouselRef = useRef(null)
+  const dragOffsetRef = useRef(0)
+
   const next = () => setCurrentIndex(i => (i + 1) % REVIEWS.length)
   const prev = () => setCurrentIndex(i => (i - 1 + REVIEWS.length) % REVIEWS.length)
 
-  const onTouchStart = e => {
-    touchStartX.current = e.touches[0].clientX
-    setDragging(true)
-  }
+  useEffect(() => {
+    const el = carouselRef.current
+    if (!el) return
 
-  const onTouchMove = e => {
-    if (touchStartX.current === null) return
-    setDragOffset(e.touches[0].clientX - touchStartX.current)
-  }
+    const onTouchStart = e => {
+      touchStartX.current = e.touches[0].clientX
+      setDragging(true)
+    }
+    const onTouchMove = e => {
+      if (touchStartX.current === null) return
+      const dx = e.touches[0].clientX - touchStartX.current
+      if (Math.abs(dx) > 5) e.preventDefault()
+      dragOffsetRef.current = dx
+      setDragOffset(dx)
+    }
+    const onTouchEnd = () => {
+      const dx = dragOffsetRef.current
+      if (dx < -50) setCurrentIndex(i => (i + 1) % REVIEWS.length)
+      else if (dx > 50) setCurrentIndex(i => (i - 1 + REVIEWS.length) % REVIEWS.length)
+      dragOffsetRef.current = 0
+      setDragOffset(0)
+      setDragging(false)
+      touchStartX.current = null
+    }
 
-  const onTouchEnd = () => {
-    if (dragOffset < -50) next()
-    else if (dragOffset > 50) prev()
-    setDragOffset(0)
-    setDragging(false)
-    touchStartX.current = null
-  }
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [])
 
   const trackStyle = {
     transform: `translateX(calc(-${currentIndex * 100}% + ${dragOffset}px))`,
@@ -421,12 +446,7 @@ function AvisSection() {
           </div>
         </div>
       </div>
-      <div
-        className="rs-carousel"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
+      <div className="rs-carousel" ref={carouselRef}>
         <div className="rs-track" style={trackStyle}>
           {REVIEWS.map(r => (
             <div key={r.id} className="rs-slide">
