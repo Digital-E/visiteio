@@ -39,14 +39,15 @@
 
 .pill-open { font-weight: 500; }
 
-.dot-green {
+.dot-green, .dot-red {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #acff71;
   flex-shrink: 0;
-  display: inline-block;
 }
+
+.dot-green { background: #acff71; }
+.dot-red   { background: #ff4d4d; }
 
 /* ─── Bio Card ───────────────────────────── */
 .bio-card {
@@ -81,7 +82,6 @@
   color: #1d19ff;
   text-decoration: none;
   display: inline-block;
-  margin-bottom: 24px;
 }
 
 .bio-link:hover { text-decoration: underline; }
@@ -90,6 +90,7 @@
   font-size: 13px;
   font-weight: 500;
   color: #000;
+  margin-top: 24px;
   margin-bottom: 4px;
 }
 
@@ -198,7 +199,7 @@
   padding: 4px 0;
   font-size: 13px;
   font-weight: 400;
-  color: #000;
+  color: #444;
   line-height: 1.8;
 }
 
@@ -223,20 +224,16 @@
   touch-action: pan-y;
 }
 
-.prestations-scroll {
+.prestations-track {
   display: flex;
   gap: 12px;
-  overflow-x: scroll;
-  padding: 0 25px 4px 25px;
-  scroll-padding-left: 25px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  scroll-snap-type: x mandatory;
+  padding: 0 25px;
+  transition: transform 0.3s ease;
 }
 
-.prestations-scroll::-webkit-scrollbar { display: none; }
-
-.service-card { scroll-snap-align: start; }
+.prestations-slide {
+  flex-shrink: 0;
+}
 
 .prestations-nav {
   display: flex;
@@ -261,7 +258,7 @@
 
 .service-card {
   flex-shrink: 0;
-  width: 230px;
+  width: 360px;
   background: #f6f6f6;
   border-radius: 16px;
   overflow: hidden;
@@ -338,11 +335,11 @@
 .rs-title-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .rs-count {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: #888;
 }
@@ -354,7 +351,7 @@
 }
 
 .rs-counter {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: #888;
 }

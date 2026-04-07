@@ -25,6 +25,21 @@ const SCHEDULE = [
   ['Dimanche', 'Fermé'],
 ]
 
+function isOpen() {
+  const now = new Date()
+  const day = now.getDay() // 0=Sun,1=Mon,...,6=Sat
+  const minutes = now.getHours() * 60 + now.getMinutes()
+  // SCHEDULE is Mon–Sun (index 0=Mon), JS day 0=Sun
+  const scheduleIdx = day === 0 ? 6 : day - 1
+  const hours = SCHEDULE[scheduleIdx][1]
+  if (hours === 'Fermé') return false
+  const [start, end] = hours.split(' – ').map(t => {
+    const [h, m] = t.split(':').map(Number)
+    return h * 60 + m
+  })
+  return minutes >= start && minutes < end
+}
+
 const ACCESS_TABS = [
   {
     id: 'transport',
@@ -198,8 +213,8 @@ function Header() {
         Contact
       </a>
       <div className="pill pill-open">
-        <span className="dot-green" />
-        Ouvert
+        <span className={isOpen() ? 'dot-green' : 'dot-red'} />
+        {isOpen() ? 'Ouvert' : 'Fermé'}
       </div>
     </div>
   )
@@ -216,7 +231,12 @@ function BioCard() {
         <div className="bio-address">
           73 Av. du Général Leclerc<br />33600 Pessac
         </div>
-        <a className="bio-link" href="https://maps.app.goo.gl/J9Hnp76zi6duitAC7" target="_blank" rel="noreferrer">Ouvrir dans Maps</a>
+        <a className="bio-link" href="https://maps.app.goo.gl/J9Hnp76zi6duitAC7" target="_blank" rel="noreferrer">
+          Ouvrir dans Maps
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ marginLeft: 4, verticalAlign: 'middle' }}>
+            <path d="M2 9L9 2M9 2H3.5M9 2V7.5" stroke="#1d19ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </a>
       </div>
       <img className="bio-photo" src={IMAGES.doctor} alt="Dr. Joao Maria Mendes" />
     </div>
@@ -267,38 +287,45 @@ function HorairesSection() {
 }
 
 function PrestationsSection() {
-  const scrollRef = useRef(null)
+  const [cardIndex, setCardIndex] = useState(0)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [dragging, setDragging] = useState(false)
   const wrapRef = useRef(null)
-  const CARD_STEP = 242 // card width (230) + gap (12)
-  const currentCard = useRef(0)
   const touchStartX = useRef(null)
-  const locked = useRef(false)
+  const dragOffsetRef = useRef(0)
+  const cardIndexRef = useRef(0)
 
-  const scrollToCard = (index, smooth = true) => {
+  const CARD_STEP = 372 // 360px card + 12px gap
+  const MAX_OFFSET = Math.max(0, 25 + SERVICES.length * 360 + (SERVICES.length - 1) * 12 + 25 - 440)
+
+  const goTo = index => {
     const clamped = Math.max(0, Math.min(SERVICES.length - 1, index))
-    currentCard.current = clamped
-    scrollRef.current?.scrollTo({ left: clamped * CARD_STEP, behavior: smooth ? 'smooth' : 'instant' })
+    cardIndexRef.current = clamped
+    setCardIndex(clamped)
   }
-
-  const scroll = dir => scrollToCard(currentCard.current + dir)
+  const scroll = dir => goTo(cardIndexRef.current + dir)
 
   useEffect(() => {
     const el = wrapRef.current
     if (!el) return
     const onTouchStart = e => {
-      if (locked.current) return
       touchStartX.current = e.touches[0].clientX
+      setDragging(true)
     }
     const onTouchMove = e => {
       if (touchStartX.current === null) return
       const dx = e.touches[0].clientX - touchStartX.current
       if (Math.abs(dx) > 5) e.preventDefault()
+      dragOffsetRef.current = dx
+      setDragOffset(dx)
     }
-    const onTouchEnd = e => {
-      if (touchStartX.current === null) return
-      const dx = touchStartX.current - e.changedTouches[0].clientX
-      if (dx > 50) scrollToCard(currentCard.current + 1)
-      else if (dx < -50) scrollToCard(currentCard.current - 1)
+    const onTouchEnd = () => {
+      const dx = dragOffsetRef.current
+      if (dx < -30) goTo(cardIndexRef.current + 1)
+      else if (dx > 30) goTo(cardIndexRef.current - 1)
+      dragOffsetRef.current = 0
+      setDragOffset(0)
+      setDragging(false)
       touchStartX.current = null
     }
     el.addEventListener('touchstart', onTouchStart, { passive: true })
@@ -309,7 +336,14 @@ function PrestationsSection() {
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
     }
-  }, [])
+  }, [cardIndex])
+
+  const offset = Math.min(cardIndex * CARD_STEP, MAX_OFFSET)
+  const trackStyle = {
+    transform: `translateX(calc(-${offset}px + ${dragOffset}px))`,
+    transition: dragging ? 'none' : 'transform 0.3s ease',
+  }
+
   return (
     <div className="section">
       <div className="section-header">
@@ -328,16 +362,18 @@ function PrestationsSection() {
         </div>
       </div>
       <div className="prestations-wrap" ref={wrapRef}>
-        <div className="prestations-scroll" ref={scrollRef}>
+        <div className="prestations-track" style={trackStyle}>
           {SERVICES.map(s => (
-            <div key={s.title} className="service-card">
-              <img className="service-card-img" src={s.img} alt={s.title} />
-              <div className="service-card-body">
-                <div className="service-card-title">{s.title}</div>
-                <div className="service-card-desc">{s.desc}</div>
-                <a className="learn-more" href="#">
-                  En savoir plus <ArrowRight color="#1D19FF" />
-                </a>
+            <div key={s.title} className="prestations-slide">
+              <div className="service-card">
+                <img className="service-card-img" src={s.img} alt={s.title} />
+                <div className="service-card-body">
+                  <div className="service-card-title">{s.title}</div>
+                  <div className="service-card-desc">{s.desc}</div>
+                  <a className="learn-more" href="#">
+                    En savoir plus <ArrowRight color="#1D19FF" />
+                  </a>
+                </div>
               </div>
             </div>
           ))}
