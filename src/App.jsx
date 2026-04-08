@@ -582,15 +582,22 @@ function HorairesSection() {
       </div>
       <div className={`collapsible-content${open ? ' open' : ''}`}>
         <div className="tarifs-list">
-          {SCHEDULE.map(([day, hours], i) => (
-            <div key={day} className={`tarifs-row${i > 0 ? ' tarifs-row-bordered' : ''}${i === todayIdx ? ' schedule-today' : ''}`}>
-              <span className="schedule-left">
-                <span className={hours === 'Fermé' ? 'dot-gray' : 'dot-green'} />
-                <span className={`tarifs-name${i === todayIdx ? ' schedule-today-label' : ''}`}>{day}</span>
-              </span>
-              <span className="schedule-hours" style={hours === 'Fermé' ? { color: '#999' } : undefined}>{hours}</span>
-            </div>
-          ))}
+          {SCHEDULE.map(([day, hours], i) => {
+            const isWeekend = i >= 5
+            const isFirstWeekend = i === 5
+            const isClosed = hours === 'Fermé'
+            const isToday = i === todayIdx
+            return (
+              <div
+                key={day}
+                className={`tarifs-row${i > 0 ? ' tarifs-row-bordered' : ''}${isToday ? ' schedule-today' : ''}${isWeekend ? ' schedule-weekend' : ''}`}
+                style={isFirstWeekend ? { borderTop: '2px solid #e8e8e8' } : undefined}
+              >
+                <span className={`tarifs-name${isToday ? ' schedule-today-label' : ''}${isWeekend ? ' schedule-weekend-label' : ''}`}>{day}</span>
+                <span className="schedule-hours" style={isClosed ? { color: '#bbb' } : undefined}>{hours}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
@@ -710,7 +717,6 @@ function PrestationsSection() {
                 <img className="service-card-img" src={s.img} alt={s.title} />
                 <div className="service-card-body">
                   <div className="service-card-title">{s.title}</div>
-                  <div className="service-card-desc">{s.desc}</div>
                   <button className="learn-more" onClick={() => setActiveService(s)}>
                     En savoir plus <ArrowRight color="#1D19FF" />
                   </button>

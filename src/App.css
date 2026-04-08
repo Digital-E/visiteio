@@ -561,14 +561,12 @@
 }
 
 /* ─── Schedule ───────────────────────────── */
-.schedule-today { background: #ebebeb; }
+.schedule-today { background: var(--color-active, #ebebeb); }
+.schedule-today-label { font-weight: 600; }
+.schedule-weekend-label { color: #aaa; }
+.schedule-weekend .schedule-hours { color: #bbb; }
 
 
-.schedule-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
 .schedule-hours { font-weight: 600; font-size: 14px; }
 
@@ -622,18 +620,24 @@
 
 .service-card-img {
   width: 100%;
-  height: 127px;
+  height: 200px;
   object-fit: cover;
   display: block;
 }
 
-.service-card-body { padding: 20px; }
+.service-card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
 
 .service-card-title {
   font-size: 15px;
   font-weight: 500;
   color: #000;
-  margin-bottom: 8px;
+  flex: 1;
 }
 
 .service-card-desc {
@@ -657,6 +661,8 @@
   padding: 0;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .learn-more:hover { text-decoration: underline; }
