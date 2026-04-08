@@ -148,21 +148,6 @@
 }
 
 /* ─── Tarifs ─────────────────────────────── */
-.tarifs-badges {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.tarifs-badge {
-  background: var(--color-surface, #f6f6f6);
-  border-radius: 100px;
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #000;
-}
-
 .tarifs-list {
   background: var(--color-surface, #f6f6f6);
   border-radius: 12px;
@@ -542,6 +527,9 @@
 }
 
 /* ─── Schedule ───────────────────────────── */
+.schedule-today { background: #ebebeb; }
+
+
 .schedule-left {
   display: flex;
   align-items: center;

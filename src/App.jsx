@@ -242,23 +242,39 @@ function BioCard() {
 }
 
 function TarifsSection() {
+  const [open, setOpen] = useState(false)
   return (
     <div className="section">
-      <div className="section-header">
+      <div className="section-header clickable" onClick={() => setOpen(o => !o)}>
         <span className="section-title">Tarifs et remboursement</span>
+        <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
       </div>
-      <div className="tarifs-badges">
-        <span className="tarifs-badge">Conventionné</span>
-        <span className="tarifs-badge">Carte Vitale acceptée</span>
-      </div>
-      <div className="tarifs-list">
-        <div className="tarifs-row">
-          <span className="tarifs-name">Consultation</span>
-          <a className="tarifs-link" href="#tarifs-detail" onClick={e => { e.preventDefault(); document.getElementById('tarifs-detail').scrollIntoView({ behavior: 'smooth' }) }}>Voir les tarifs</a>
+      <div className={`collapsible-content${open ? ' open' : ''}`} style={{ '--max-h': '600px' }}>
+        <div className="tarifs-list">
+          <div className="tarifs-row">
+            <span className="tarifs-name">Conventionné</span>
+            <span className="tarifs-methods">Secteur 1</span>
+          </div>
+          <div className="tarifs-row tarifs-row-bordered">
+            <span className="tarifs-name">Carte Vitale</span>
+            <span className="tarifs-methods">Acceptée</span>
+          </div>
+          <div className="tarifs-row tarifs-row-bordered">
+            <span className="tarifs-name">Moyens de paiement</span>
+            <span className="tarifs-methods">Chèques, espèces et carte bancaire</span>
+          </div>
         </div>
-        <div className="tarifs-row tarifs-row-bordered">
-          <span className="tarifs-name">Moyens de paiement</span>
-          <span className="tarifs-methods">Chèques, espèces et carte bancaire</span>
+        <div className="tarifs-detail-list" style={{ marginTop: 16 }}>
+          {TARIFS_DETAIL.map((item, i) => (
+            <div key={i} className={`tarifs-detail-item${i > 0 ? ' tarifs-row-bordered' : ''}`}>
+              <div className="tarifs-detail-top">
+                <span className="tarifs-detail-title">{item.title}</span>
+                <span className="tarifs-price">{item.price}</span>
+              </div>
+              {item.desc && <p className="tarifs-detail-desc">{item.desc}</p>}
+              {item.disclaimer && <p className="tarifs-disclaimer">{TARIF_DISCLAIMER}</p>}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -517,27 +533,6 @@ const TARIFS_DETAIL = [
   },
 ]
 
-function DetailedTarifsSection() {
-  return (
-    <div className="section" id="tarifs-detail">
-      <div className="section-header">
-        <span className="section-title">Tarifs</span>
-      </div>
-      <div className="tarifs-detail-list">
-        {TARIFS_DETAIL.map((item, i) => (
-          <div key={i} className={`tarifs-detail-item${i > 0 ? ' tarifs-row-bordered' : ''}`}>
-            <div className="tarifs-detail-top">
-              <span className="tarifs-detail-title">{item.title}</span>
-              <span className="tarifs-price">{item.price}</span>
-            </div>
-            {item.desc && <p className="tarifs-detail-desc">{item.desc}</p>}
-            {item.disclaimer && <p className="tarifs-disclaimer">{TARIF_DISCLAIMER}</p>}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 function CoordonneesSection() {
   const [open, setOpen] = useState(false)
@@ -565,6 +560,9 @@ function CoordonneesSection() {
 
 function HorairesSection() {
   const [open, setOpen] = useState(false)
+  const jsDay = new Date().getDay() // 0=Sun
+  const todayIdx = jsDay === 0 ? 6 : jsDay - 1 // SCHEDULE: 0=Mon
+
   return (
     <div className="section" style={{ marginTop: 56 }}>
       <div className="section-header clickable" onClick={() => setOpen(o => !o)}>
@@ -574,10 +572,10 @@ function HorairesSection() {
       <div className={`collapsible-content${open ? ' open' : ''}`}>
         <div className="tarifs-list">
           {SCHEDULE.map(([day, hours], i) => (
-            <div key={day} className={`tarifs-row${i > 0 ? ' tarifs-row-bordered' : ''}`}>
+            <div key={day} className={`tarifs-row${i > 0 ? ' tarifs-row-bordered' : ''}${i === todayIdx ? ' schedule-today' : ''}`}>
               <span className="schedule-left">
                 <span className={hours === 'Fermé' ? 'dot-gray' : 'dot-green'} />
-                <span className="tarifs-name">{day}</span>
+                <span className={`tarifs-name${i === todayIdx ? ' schedule-today-label' : ''}`}>{day}</span>
               </span>
               <span className="schedule-hours" style={hours === 'Fermé' ? { color: '#999' } : undefined}>{hours}</span>
             </div>
@@ -979,7 +977,6 @@ export default function App() {
       <PresentationSection />
       <HorairesSection />
       <CoordonneesSection />
-      <DetailedTarifsSection />
       <PrestationsSection />
       <FaqSection />
       <AvisSection />
