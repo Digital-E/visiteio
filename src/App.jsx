@@ -561,6 +561,34 @@ function AvisSection() {
   )
 }
 
+const THEMES = [
+  { label: 'Default',  bg: '#ffffff', surface: '#f6f6f6', active: '#e0e0e0' },
+  { label: 'Lavande',  bg: '#f8f5ff', surface: '#ede8f5', active: '#d8d0ed' },
+  { label: 'Menthe',   bg: '#f2fdf6', surface: '#e2f5ea', active: '#c8ebd4' },
+  { label: 'Pêche',    bg: '#fff5f0', surface: '#fde8de', active: '#f5d4c4' },
+  { label: 'Ciel',     bg: '#f0f7ff', surface: '#dff0ff', active: '#c8e0f5' },
+  { label: 'Citron',   bg: '#fffdf0', surface: '#f5f0d8', active: '#e8e0b8' },
+]
+
+function ThemePicker({ theme, setTheme }) {
+  return (
+    <div className="theme-picker">
+      <span className="theme-picker-label">Couleur</span>
+      <div className="theme-swatches">
+        {THEMES.map(t => (
+          <button
+            key={t.label}
+            className={`theme-swatch${theme.label === t.label ? ' active' : ''}`}
+            style={{ '--swatch-bg': t.bg, '--swatch-surface': t.surface }}
+            onClick={() => setTheme(t)}
+            aria-label={t.label}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Footer() {
   return (
     <div className="footer">
@@ -576,8 +604,9 @@ function Footer() {
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [theme, setTheme] = useState(THEMES[0])
   return (
-    <div className="phone">
+    <div className="phone" style={{ '--color-bg': theme.bg, '--color-surface': theme.surface, '--color-active': theme.active }}>
       <Header />
       <BioCard />
       <AccessSection />
@@ -591,6 +620,7 @@ export default function App() {
       <Collapsible title="Informations Complémentaires">
         Conventionné secteur 1. Carte Vitale acceptée. Prise en charge mutuelle selon contrat.
       </Collapsible>
+      <ThemePicker theme={theme} setTheme={setTheme} />
       <Footer />
     </div>
   )
