@@ -161,14 +161,6 @@ const SERVICES = [
 
 // ── Shared icons ──────────────────────────────────────────────────────────────
 
-function ChevronDown() {
-  return (
-    <svg width="9" height="5" viewBox="0 0 9 5" fill="none">
-      <path d="M1 1L4.5 4L8 1" stroke="#000" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 function ArrowRight({ color = '#000' }) {
   return (
     <svg width="5" height="9" viewBox="0 0 5 9" fill="none">
@@ -182,7 +174,9 @@ function ArrowRight({ color = '#000' }) {
 function DropdownBtn({ open, onClick }) {
   return (
     <button className={`dropdown-btn${open ? ' open' : ''}`} onClick={onClick} aria-expanded={open}>
-      <ChevronDown />
+      <svg width="9" height="9" fill="none" viewBox="0 0 5 9" style={{ transform: open ? 'rotate(270deg)' : 'rotate(90deg)', transition: 'transform 0.2s ease' }}>
+        <path d={ARROW_PATH} fill="#000" />
+      </svg>
     </button>
   )
 }
@@ -272,12 +266,15 @@ function HorairesSection() {
         <span className="section-title">Horaires</span>
         <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
       </div>
-      <div className={`collapsible-content${open ? ' open' : ''}`} style={{ '--max-h': '160px' }}>
+      <div className={`collapsible-content${open ? ' open' : ''}`}>
         <div className="schedule">
           {SCHEDULE.map(([day, hours], i) => (
             <div key={day} className={`schedule-row${i % 2 === 1 ? ' alt' : ''}`}>
-              <span className="schedule-day">{day}</span>
-              <span className="schedule-hours">{hours}</span>
+              <span className="schedule-left">
+                <span className={hours === 'Fermé' ? 'dot-gray' : 'dot-green'} />
+                <span className="schedule-day">{day}</span>
+              </span>
+              <span className="schedule-hours" style={hours === 'Fermé' ? { color: '#999' } : undefined}>{hours}</span>
             </div>
           ))}
         </div>
@@ -454,26 +451,31 @@ function AvisSection() {
   const carouselRef = useRef(null)
   const dragOffsetRef = useRef(0)
   const locked = useRef(false)
+  const posRef = useRef(1)
 
   // Real index for display (0-based)
-  const realIndex = pos === 0 ? REVIEWS.length - 1 : pos === INFINITE.length - 1 ? 0 : pos - 1
+  const clampedPos = Math.max(0, Math.min(INFINITE.length - 1, pos))
+  const realIndex = clampedPos === 0 ? REVIEWS.length - 1 : clampedPos === INFINITE.length - 1 ? 0 : clampedPos - 1
 
   const goTo = nextPos => {
     if (locked.current) return
     locked.current = true
+    posRef.current = nextPos
     setAnimated(true)
     setPos(nextPos)
   }
-  const next = () => goTo(pos + 1)
-  const prev = () => goTo(pos - 1)
+  const next = () => goTo(posRef.current + 1)
+  const prev = () => goTo(posRef.current - 1)
 
   // After sliding to a clone, silently jump to the real slide
   const onTransitionEnd = () => {
-    if (pos === 0) {
+    if (posRef.current === 0) {
       setAnimated(false)
+      posRef.current = REVIEWS.length
       setPos(REVIEWS.length)
-    } else if (pos === INFINITE.length - 1) {
+    } else if (posRef.current === INFINITE.length - 1) {
       setAnimated(false)
+      posRef.current = 1
       setPos(1)
     }
     locked.current = false
@@ -495,12 +497,11 @@ function AvisSection() {
     }
     const onTouchEnd = () => {
       const dx = dragOffsetRef.current
-      if (dx < -50) setPos(p => p + 1)
-      else if (dx > 50) setPos(p => p - 1)
+      if (dx < -50) goTo(posRef.current + 1)
+      else if (dx > 50) goTo(posRef.current - 1)
       dragOffsetRef.current = 0
       setDragOffset(0)
       setDragging(false)
-      setAnimated(true)
       touchStartX.current = null
     }
     el.addEventListener('touchstart', onTouchStart, { passive: true })
