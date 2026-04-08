@@ -580,7 +580,7 @@ function HorairesSection() {
         <span className="section-title">Horaires</span>
         <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
       </div>
-      <div className={`collapsible-content${open ? ' open' : ''}`}>
+      <div className={`collapsible-content${open ? ' open' : ''}`} style={{ '--max-h': '400px' }}>
         <div className="tarifs-list">
           {SCHEDULE.map(([day, hours], i) => {
             const isWeekend = i >= 5
