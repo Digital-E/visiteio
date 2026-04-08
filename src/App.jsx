@@ -237,23 +237,325 @@ function BioCard() {
   )
 }
 
-function AccessSection() {
-  const [activeTab, setActiveTab] = useState('transport')
-  const active = ACCESS_TABS.find(t => t.id === activeTab)
+function TarifsSection() {
   return (
     <div className="section">
-      <div className="access-tabs">
-        {ACCESS_TABS.map(tab => (
-          <button
-            key={tab.id}
-            className={`tab-btn${activeTab === tab.id ? ' active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
+      <div className="section-header">
+        <span className="section-title">Tarifs et remboursement</span>
+      </div>
+      <div className="tarifs-badges">
+        <span className="tarifs-badge">Conventionné</span>
+        <span className="tarifs-badge">Carte Vitale acceptée</span>
+      </div>
+      <div className="tarifs-list">
+        <div className="tarifs-row">
+          <span className="tarifs-name">Consultation</span>
+          <a className="tarifs-link" href="#tarifs-detail" onClick={e => { e.preventDefault(); document.getElementById('tarifs-detail').scrollIntoView({ behavior: 'smooth' }) }}>Voir les tarifs</a>
+        </div>
+        <div className="tarifs-row tarifs-row-bordered">
+          <span className="tarifs-name">Moyens de paiement</span>
+          <span className="tarifs-methods">Chèques, espèces et carte bancaire</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const EXPERTISES = [
+  'Blanchiment des dents',
+  'Chirurgie buccale',
+  'Chirurgie des gencives',
+  'Extraction dentaire',
+  'Greffe de gencive',
+  'Greffe osseuse',
+  'Implant dentaire',
+  'Implantologie',
+  'Implantologie dentaire',
+  'Parodontie',
+  'Parodontite',
+  'Prothèse sur implant',
+  'Surfaçage',
+  'Urgence dentaire',
+]
+
+
+function ExpertisesSection() {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <div className="section">
+      <div className="section-header">
+        <span className="section-title">Expertises et actes</span>
+      </div>
+      <div className={`expertises-wrap${expanded ? ' expanded' : ''}`}>
+        <div className="expertises-list">
+          {EXPERTISES.map(e => (
+            <span key={e} className="expertises-tag">{e}</span>
+          ))}
+        </div>
+        {!expanded && <div className="expertises-fade" />}
+      </div>
+      <button className="expertises-voir-plus" onClick={() => setExpanded(e => !e)}>
+        {expanded ? 'Voir moins' : 'Voir plus'}
+        <svg width="9" height="9" fill="none" viewBox="0 0 5 9" style={{ transform: expanded ? 'rotate(270deg)' : 'rotate(90deg)', transition: 'transform 0.2s' }}>
+          <path d={ARROW_PATH} fill="#000" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+function AccessSection() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="section">
+      <div className="section-header clickable" onClick={() => setOpen(o => !o)}>
+        <span className="section-title">Accès</span>
+        <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
+      </div>
+      <div className={`collapsible-content${open ? ' open' : ''}`}>
+        <div className="access-list">
+          {ACCESS_TABS.map((item, i) => (
+            <div key={item.id} className={`access-item${i < ACCESS_TABS.length - 1 ? ' access-item-bordered' : ''}`}>
+              <span className="access-item-label">{item.label}</span>
+              <span className="access-item-content">{item.content}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const GALLERY = [
+  'https://images.pexels.com/photos/287237/pexels-photo-287237.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/6812453/pexels-photo-6812453.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/6812479/pexels-photo-6812479.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/5355867/pexels-photo-5355867.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/30902075/pexels-photo-30902075.jpeg?auto=compress&cs=tinysrgb&w=400',
+]
+
+function Lightbox({ images, index, onClose, onPrev, onNext }) {
+  const overlayRef = useRef(null)
+  const touchStartX = useRef(null)
+  const swiped = useRef(false)
+
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') onPrev()
+      if (e.key === 'ArrowRight') onNext()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, onPrev, onNext])
+
+  useEffect(() => {
+    const el = overlayRef.current
+    if (!el) return
+    const onTouchStart = e => {
+      touchStartX.current = e.touches[0].clientX
+      swiped.current = false
+    }
+    const onTouchEnd = e => {
+      if (touchStartX.current === null) return
+      const dx = e.changedTouches[0].clientX - touchStartX.current
+      if (dx < -50) { onNext(); swiped.current = true }
+      else if (dx > 50) { onPrev(); swiped.current = true }
+      touchStartX.current = null
+    }
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [onNext, onPrev])
+
+  const handleClick = () => {
+    if (swiped.current) { swiped.current = false; return }
+    onClose()
+  }
+
+  return (
+    <div className="lightbox-overlay" ref={overlayRef} onClick={handleClick}>
+      <button className="lightbox-close" onClick={onClose}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 1L13 13M13 1L1 13" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </button>
+      <button className="lightbox-nav lightbox-prev" onClick={e => { e.stopPropagation(); onPrev() }}>
+        <svg width="9" height="9" fill="none" viewBox="0 0 5 9" style={{ transform: 'rotate(180deg)' }}>
+          <path d={ARROW_PATH} fill="#fff" />
+        </svg>
+      </button>
+      <img
+        className="lightbox-img"
+        src={images[index].replace('w=400', 'w=1200')}
+        alt=""
+        onClick={e => e.stopPropagation()}
+      />
+      <button className="lightbox-nav lightbox-next" onClick={e => { e.stopPropagation(); onNext() }}>
+        <svg width="9" height="9" fill="none" viewBox="0 0 5 9">
+          <path d={ARROW_PATH} fill="#fff" />
+        </svg>
+      </button>
+      <span className="lightbox-counter">{index + 1} / {images.length}</span>
+    </div>
+  )
+}
+
+function GallerySection() {
+  const [activeIndex, setActiveIndex] = useState(null)
+  const count = GALLERY.length
+  const open = i => setActiveIndex(i)
+  const close = () => setActiveIndex(null)
+  const prev = () => setActiveIndex(i => (i - 1 + count) % count)
+  const next = () => setActiveIndex(i => (i + 1) % count)
+
+  return (
+    <>
+      <div className="gallery-strip">
+        {GALLERY.map((src, i) => (
+          <img key={i} className="gallery-img" src={src} alt="" onClick={() => open(i)} />
         ))}
       </div>
-      <div className="access-info">{active.content}</div>
+      {activeIndex !== null && (
+        <Lightbox images={GALLERY} index={activeIndex} onClose={close} onPrev={prev} onNext={next} />
+      )}
+    </>
+  )
+}
+
+function DiplomesGroup({ title, children }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="diplomes-group">
+      <div className="diplomes-group-header" onClick={() => setOpen(o => !o)}>
+        <span className="diplomes-group-title">{title}</span>
+        <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
+      </div>
+      <div className={`collapsible-content${open ? ' open' : ''}`}>
+        <div className="collapsible-body diplomes-body">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+function PresentationSection() {
+  return (
+    <div className="section">
+      <div className="section-header">
+        <span className="section-title">Présentation</span>
+      </div>
+      <p className="presentation-text">
+        Chirurgien-dentiste diplômée de la faculté de Bordeaux, le dr Thibon a complété sa formation par des DU d'implantologie, d'endodontie et des CES de prothèse et parodontologie. Sa pratique est désormais orientée vers la chirurgie implantaire, osseuse, les greffes gingivales et les prothèses complètes sur implants (PACSI). Son parcours nous permets de proposer une prise en charge globale et personnalisée, centrée sur des plans de traitement complets et adaptés à chaque patient.
+      </p>
+      <p className="presentation-text">
+        Elle accorde une attention particulière à la confiance, l'écoute et au confort de chacun, veillant à offrir une expérience de soin aussi rassurante qu'efficace. Le dr Thibon essaie chaque jour d'allier exigence technique et approche humaine pour garantir à mes patients des résultats durables et sur mesure.
+      </p>
+      <div className="diplomes">
+        <DiplomesGroup title="Diplômes nationaux et universitaires">
+          <div className="diplomes-item">
+            <span className="diplomes-year">2025</span>
+            <span className="diplomes-label">D.U. Dermatologie buccale — UFR d'odontologie de Nice</span>
+          </div>
+          <div className="diplomes-item">
+            <span className="diplomes-year">2023</span>
+            <span className="diplomes-label">Diplôme d'État de docteur en chirurgie dentaire — UFR d'odontologie de Nantes</span>
+          </div>
+        </DiplomesGroup>
+        <DiplomesGroup title="Autres formations">
+          <div className="diplomes-item">
+            <span className="diplomes-label">Attestation de formation aux actes bucco-dentaires sous sédation consciente de MEOPA — BORDEAUX</span>
+          </div>
+        </DiplomesGroup>
+      </div>
+      <GallerySection />
+      <div className="presentation-meta">
+        <span className="presentation-meta-label">Langues parlées</span>
+        <span className="presentation-meta-value">Anglais et Français</span>
+      </div>
+      <div className="presentation-meta">
+        <span className="presentation-meta-label">Site web</span>
+        <a className="presentation-meta-link" href="#" target="_blank" rel="noreferrer">
+          Voir le site
+          <svg width="10" height="10" viewBox="0 0 11 11" fill="none" style={{ marginLeft: 4, verticalAlign: 'middle' }}>
+            <path d="M2 9L9 2M9 2H3.5M9 2V7.5" stroke="#1d19ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  )
+}
+
+const TARIF_DISCLAIMER = "Ces honoraires vous sont communiqués à titre indicatif par le soignant. Ils peuvent varier selon le type de soins finalement réalisés en cabinet, le nombre de consultations et les actes additionnels nécessaires. En cas de dépassement des tarifs, le soignant doit en avertir préalablement le patient."
+
+const TARIFS_DETAIL = [
+  {
+    title: 'Consultation dentaire',
+    price: '23 €',
+  },
+  {
+    title: "Prise en charge spécifique de l\u2019enfant",
+    price: '40 €',
+    desc: "Ce complément d'honoraires est appliqué lors de chaque soin. Il n'est pas remboursé par la Sécurité sociale. Il s'ajoute aux soins qui eux, pourront être remboursés par la Sécurité sociale.",
+  },
+  {
+    title: 'Maintenance prophylactique',
+    price: '30 €',
+    desc: "Ce complément d'honoraires est appliqué à chaque rendez-vous de 1ère consultation ou bilan annuel bucco-dentaire. Il n'est pas remboursé par la Sécurité sociale.",
+    disclaimer: true,
+  },
+]
+
+function DetailedTarifsSection() {
+  return (
+    <div className="section" id="tarifs-detail">
+      <div className="section-header">
+        <span className="section-title">Tarifs</span>
+      </div>
+      <div className="tarifs-detail-list">
+        {TARIFS_DETAIL.map((item, i) => (
+          <div key={i} className={`tarifs-detail-item${i > 0 ? ' tarifs-row-bordered' : ''}`}>
+            <div className="tarifs-detail-top">
+              <span className="tarifs-detail-title">{item.title}</span>
+              <span className="tarifs-price">{item.price}</span>
+            </div>
+            {item.desc && <p className="tarifs-detail-desc">{item.desc}</p>}
+            {item.disclaimer && <p className="tarifs-disclaimer">{TARIF_DISCLAIMER}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CoordonneesSection() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="section">
+      <div className="section-header clickable" onClick={() => setOpen(o => !o)}>
+        <span className="section-title">Coordonnées</span>
+        <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
+      </div>
+      <div className={`collapsible-content${open ? ' open' : ''}`}>
+        <div className="tarifs-list">
+          <div className="tarifs-row">
+            <span className="tarifs-name">Téléphone</span>
+            <a className="coordonnees-phone" href="tel:+33556992070">05 56 99 20 70</a>
+          </div>
+          <div className="tarifs-row tarifs-row-bordered">
+            <span className="tarifs-name">Contact d'urgence</span>
+            <span className="tarifs-methods">En cas d'urgence, contactez le 15 (Samu)</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -267,12 +569,12 @@ function HorairesSection() {
         <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
       </div>
       <div className={`collapsible-content${open ? ' open' : ''}`}>
-        <div className="schedule">
+        <div className="tarifs-list">
           {SCHEDULE.map(([day, hours], i) => (
-            <div key={day} className={`schedule-row${i % 2 === 1 ? ' alt' : ''}`}>
+            <div key={day} className={`tarifs-row${i > 0 ? ' tarifs-row-bordered' : ''}`}>
               <span className="schedule-left">
                 <span className={hours === 'Fermé' ? 'dot-gray' : 'dot-green'} />
-                <span className="schedule-day">{day}</span>
+                <span className="tarifs-name">{day}</span>
               </span>
               <span className="schedule-hours" style={hours === 'Fermé' ? { color: '#999' } : undefined}>{hours}</span>
             </div>
@@ -344,7 +646,7 @@ function PrestationsSection() {
   return (
     <div className="section">
       <div className="section-header">
-        <span className="section-title">Préstations</span>
+        <span className="section-title">Prestations</span>
         <div className="prestations-nav">
           <button className="prestations-nav-btn" onClick={() => scroll(-1)} aria-label="Previous">
             <svg width="9" height="9" fill="none" viewBox="0 0 5 9" style={{ transform: 'rotate(180deg)' }}>
@@ -441,7 +743,34 @@ function ReviewCard({ name, rating, ratingLabel, title, comment, avatar, date })
 // Infinite carousel: [clone of last, ...slides, clone of first]
 const INFINITE = [REVIEWS[REVIEWS.length - 1], ...REVIEWS, REVIEWS[0]]
 
+function ReviewsModal({ onClose }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  return (
+    <div className="reviews-modal-overlay" onClick={onClose}>
+      <div className="reviews-modal" onClick={e => e.stopPropagation()}>
+        <div className="reviews-modal-header">
+          <span className="reviews-modal-title">Avis ({REVIEWS.length})</span>
+          <button className="reviews-modal-close" onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1L13 13M13 1L1 13" stroke="#000" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div className="reviews-modal-list">
+          {REVIEWS.map(r => <ReviewCard key={r.id} {...r} />)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AvisSection() {
+  const [modalOpen, setModalOpen] = useState(false)
   // Start at 1 (the real first slide)
   const [pos, setPos] = useState(1)
   const [animated, setAnimated] = useState(true)
@@ -551,12 +880,13 @@ function AvisSection() {
           ))}
         </div>
       </div>
-      <button className="rs-voir-plus">
+      <button className="rs-voir-plus" onClick={() => setModalOpen(true)}>
         Voir plus
         <svg width="9" height="9" fill="none" viewBox="0 0 5 9">
           <path d={ARROW_PATH} fill="#000" />
         </svg>
       </button>
+      {modalOpen && <ReviewsModal onClose={() => setModalOpen(false)} />}
     </div>
   )
 }
@@ -609,8 +939,13 @@ export default function App() {
     <div className="phone" style={{ '--color-bg': theme.bg, '--color-surface': theme.surface, '--color-active': theme.active }}>
       <Header />
       <BioCard />
+      <TarifsSection />
+      <ExpertisesSection />
       <AccessSection />
+      <PresentationSection />
       <HorairesSection />
+      <CoordonneesSection />
+      <DetailedTarifsSection />
       <PrestationsSection />
       <FaqSection />
       <AvisSection />
