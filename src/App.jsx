@@ -141,21 +141,25 @@ const SERVICES = [
     title: 'Détartrage',
     img: IMAGES.detartrage,
     desc: 'Nettoyage professionnel en profondeur qui élimine le tartre et la plaque dentaire pour assainir les gencives et prévenir les caries.',
+    detail: "Le détartrage est un acte préventif essentiel réalisé à l'aide d'ultrasons et d'instruments manuels. Il permet d'éliminer les dépôts de tartre qui s'accumulent sur les dents et sous les gencives, zones inaccessibles au brossage quotidien.\n\nLe tartre est une plaque bactérienne calcifiée qui favorise les inflammations gingivales, la parodontite et l'apparition de caries. En le retirant régulièrement, on réduit significativement ces risques et on maintient une bonne santé bucco-dentaire.\n\nL'acte se termine par un polissage des surfaces dentaires pour éliminer les colorations superficielles dues au café, au thé ou au tabac. Un détartrage est recommandé une à deux fois par an selon votre situation.",
   },
   {
     title: 'Soins caries',
     img: IMAGES.caries,
     desc: 'Éliminer les tissus infectés pour ensuite obturer et reconstruire la dent, stoppant ainsi la progression de la lésion.',
+    detail: "Les soins de caries consistent à traiter une lésion avant qu'elle n'atteigne la pulpe dentaire. Sous anesthésie locale, le praticien retire les tissus infectés à l'aide d'une fraise puis nettoie soigneusement la cavité.\n\nLa dent est ensuite reconstruite avec un composite (résine blanche) ou un amalgame selon la localisation et l'étendue de la lésion. Le composite est photopolymérisé couche par couche pour garantir une solidité optimale et un rendu esthétique naturel.\n\nSans traitement, une carie évolue progressivement vers la pulpe, nécessitant alors une dévitalisation. Intervenir tôt permet de préserver un maximum de tissu dentaire sain et de prolonger la durée de vie de la dent.",
   },
   {
     title: 'Blanchiment',
     img: IMAGES.detartrage,
     desc: 'Traitement esthétique qui éclaircit l\u2019émail et redonne aux dents un aspect naturellement blanc et lumineux.',
+    detail: "Le blanchiment dentaire est un soin esthétique qui permet d'éclaircir la couleur naturelle des dents de plusieurs teintes, sans altérer la structure de l'émail. Il agit sur les colorations intrinsèques liées à l'âge, au tabac, à l'alimentation ou à certains médicaments.\n\nNous proposons un blanchiment ambulatoire réalisé à domicile à l'aide de gouttières sur mesure et d'un gel à base de peroxyde d'hydrogène. Le traitement s'étale généralement sur deux à trois semaines pour un résultat progressif et durable.\n\nUn bilan préalable est indispensable pour vérifier l'état de vos dents et de vos gencives. Le blanchiment est déconseillé en cas de caries non traitées, de sensibilités importantes ou pendant la grossesse.",
   },
   {
     title: 'Couronne dentaire',
     img: IMAGES.caries,
     desc: 'Prothèse fixe sur mesure qui recouvre et protège une dent fragilisée tout en restaurant son esthétique et sa fonction.',
+    detail: "La couronne dentaire est une prothèse fixe qui recouvre intégralement la partie visible d'une dent trop abîmée pour être reconstituée par un simple composite. Elle est indiquée après une dévitalisation, une fracture importante ou une usure sévère.\n\nLa pose se déroule en deux séances. Lors de la première, la dent est taillée et une empreinte numérique ou physique est réalisée pour confectionner la couronne en laboratoire. Une couronne provisoire est posée dans l'intervalle. Lors de la seconde séance, la couronne définitive — en céramique, zircone ou métal-céramique — est scellée.\n\nBien entretenue, une couronne dure en moyenne 10 à 15 ans. Elle redonne à la dent sa forme, sa solidité et son apparence naturelle.",
   },
 ]
 
@@ -432,7 +436,7 @@ function GallerySection() {
   )
 }
 
-function DiplomesGroup({ title, children }) {
+function DiplomesGroup({ title, items }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="diplomes-group">
@@ -441,7 +445,14 @@ function DiplomesGroup({ title, children }) {
         <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
       </div>
       <div className={`collapsible-content${open ? ' open' : ''}`}>
-        <div className="collapsible-body diplomes-body">{children}</div>
+        <div className="diplomes-body">
+          {items.map((item, i) => (
+            <div key={i} className="diplomes-item">
+              <span className="diplomes-label">{item.label}</span>
+              {item.year && <span className="diplomes-year">{item.year}</span>}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -459,24 +470,16 @@ function PresentationSection() {
       <p className="presentation-text">
         Elle accorde une attention particulière à la confiance, l'écoute et au confort de chacun, veillant à offrir une expérience de soin aussi rassurante qu'efficace. Le dr Thibon essaie chaque jour d'allier exigence technique et approche humaine pour garantir à mes patients des résultats durables et sur mesure.
       </p>
-      <div className="diplomes">
-        <DiplomesGroup title="Diplômes nationaux et universitaires">
-          <div className="diplomes-item">
-            <span className="diplomes-year">2025</span>
-            <span className="diplomes-label">D.U. Dermatologie buccale — UFR d'odontologie de Nice</span>
-          </div>
-          <div className="diplomes-item">
-            <span className="diplomes-year">2023</span>
-            <span className="diplomes-label">Diplôme d'État de docteur en chirurgie dentaire — UFR d'odontologie de Nantes</span>
-          </div>
-        </DiplomesGroup>
-        <DiplomesGroup title="Autres formations">
-          <div className="diplomes-item">
-            <span className="diplomes-label">Attestation de formation aux actes bucco-dentaires sous sédation consciente de MEOPA — BORDEAUX</span>
-          </div>
-        </DiplomesGroup>
-      </div>
       <GallerySection />
+      <div className="diplomes">
+        <DiplomesGroup title="Diplômes nationaux et universitaires" items={[
+          { label: "D.U. Dermatologie buccale — UFR d'odontologie de Nice", year: '2025' },
+          { label: "Diplôme d'État de docteur en chirurgie dentaire — UFR d'odontologie de Nantes", year: '2023' },
+        ]} />
+        <DiplomesGroup title="Autres formations" items={[
+          { label: "Attestation de formation aux actes bucco-dentaires sous sédation consciente de MEOPA — BORDEAUX" },
+        ]} />
+      </div>
       <div className="presentation-meta">
         <span className="presentation-meta-label">Langues parlées</span>
         <span className="presentation-meta-value">Anglais et Français</span>
@@ -563,7 +566,7 @@ function CoordonneesSection() {
 function HorairesSection() {
   const [open, setOpen] = useState(false)
   return (
-    <div className="section">
+    <div className="section" style={{ marginTop: 56 }}>
       <div className="section-header clickable" onClick={() => setOpen(o => !o)}>
         <span className="section-title">Horaires</span>
         <DropdownBtn open={open} onClick={e => { e.stopPropagation(); setOpen(o => !o) }} />
@@ -585,7 +588,37 @@ function HorairesSection() {
   )
 }
 
+function ServiceModal({ service, onClose }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  return (
+    <div className="reviews-modal-overlay" onClick={onClose}>
+      <div className="reviews-modal" onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
+        <button className="service-modal-close" onClick={onClose}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 1L13 13M13 1L1 13" stroke="#000" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <img className="service-modal-img" src={service.img} alt={service.title} />
+        <div className="service-modal-body">
+          <span className="service-modal-title">{service.title}</span>
+          <div className="service-modal-texts">
+            {(service.detail || service.desc).split('\n\n').map((p, i) => (
+              <p key={i} className="service-modal-desc">{p}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function PrestationsSection() {
+  const [activeService, setActiveService] = useState(null)
   const [cardIndex, setCardIndex] = useState(0)
   const [dragOffset, setDragOffset] = useState(0)
   const [dragging, setDragging] = useState(false)
@@ -669,15 +702,16 @@ function PrestationsSection() {
                 <div className="service-card-body">
                   <div className="service-card-title">{s.title}</div>
                   <div className="service-card-desc">{s.desc}</div>
-                  <a className="learn-more" href="#">
+                  <button className="learn-more" onClick={() => setActiveService(s)}>
                     En savoir plus <ArrowRight color="#1D19FF" />
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+      {activeService && <ServiceModal service={activeService} onClose={() => setActiveService(null)} />}
     </div>
   )
 }
