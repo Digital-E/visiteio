@@ -219,11 +219,19 @@ function Header() {
 }
 
 function BioCard() {
+  const avgRating = (REVIEWS.reduce((s, r) => s + r.rating, 0) / REVIEWS.length).toFixed(1)
   return (
     <div className="bio-card">
       <div className="bio-text">
         <div className="bio-name">Dr. Joao Maria Mendes</div>
         <div className="bio-specialty">Chirurgien-Dentiste à Pessac</div>
+        <div className="bio-rating">
+          <svg width="11" height="11" fill="none" viewBox="0 0 10 10">
+            <path d={STAR_PATH} fill="#000" />
+          </svg>
+          <span className="bio-rating-score">{avgRating}</span>
+          <span className="bio-rating-count">({REVIEWS.length} avis)</span>
+        </div>
         <a className="bio-link" href="https://www.doctolib.fr/dentiste/pessac/maria-joao-mendes#presentation" target="_blank" rel="noreferrer">Doctolib</a>
         <div className="bio-label">Adresse</div>
         <div className="bio-address">
@@ -236,7 +244,10 @@ function BioCard() {
           </svg>
         </a>
       </div>
-      <img className="bio-photo" src={IMAGES.doctor} alt="Dr. Joao Maria Mendes" />
+      <div className="bio-photo-wrap">
+        <img className="bio-photo" src={IMAGES.doctor} alt="Dr. Joao Maria Mendes" />
+        <div className="bio-photo-fade" />
+      </div>
     </div>
   )
 }
